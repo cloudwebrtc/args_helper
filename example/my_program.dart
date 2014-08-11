@@ -18,7 +18,7 @@ class MyProgram {
         break;
     }
 
-    var people = (name.isEmpty ? ["brother"] : name).join(", ");
+    var people = (name == null ? ["brother"] : name).join(", ");
     print("$hello, $people!");
   }
 

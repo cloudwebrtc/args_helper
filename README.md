@@ -3,7 +3,7 @@ args_helper
 
 ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 
-Version: 0.0.1
+Version: 0.0.2
 
 **Prototyping**
 
@@ -38,7 +38,7 @@ The implementation process can be called slightly importunate. This means that t
 
 Automatically (on each start of program) performed the following operations:
 
-- Validation of the method, which are responsible for the commands.
+- Validation of the methods, which are responsible for the commands.
 - Validation of the method parameters, which are responsible for the command options.
 
 This means that unimplemented and partially implemented commands not allowed.
@@ -66,7 +66,7 @@ class MyProgram {
         break;
     }
 
-    var people = (name.isEmpty ? ["brother"] : name).join(", ");
+    var people = (name == null ? ["brother"] : name).join(", ");
     print("$hello, $people!");
   }
 
