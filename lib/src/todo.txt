@@ -1,0 +1,2 @@
+Global options.
+Help on arguments (rest).

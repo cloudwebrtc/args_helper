@@ -1,0 +1,65 @@
+args_helper
+====================
+
+ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
+
+Version: {{VERSION}}
+
+**Prototyping**
+
+Prototyping is done by creating a commands specification. Usually this can be done in an easy to understand format.
+
+For example, possible use `yaml` format.
+
+```
+{{example/my_program.yaml}}        
+```
+
+**Implementation**
+
+The implementation process can be called slightly importunate. This means that the developed prototype will not work until you have implemented all the methods for all commands.
+
+Automatically (on each start of program) performed the following operations:
+
+- Validation of the method, which are responsible for the commands.
+- Validation of the method parameters, which are responsible for the command options.
+
+This means that unimplemented and partially implemented commands not allowed.
+
+Source code of the program for prototyped the command specification.
+
+```dart
+{{example/my_program.dart}}
+```
+
+Examples of exceptions in case of deviations from the specification.
+
+```
+ArgsHelperException: Type 'MyProgram' must have a method 'sayHelloCommand' for 'say hello' command.
+```
+
+```
+ArgsHelperException: Parameter 'String lang' not found in method 'sayHelloCommand'.
+```
+
+```
+ArgsHelperException: Method 'sayGoodbyeCommand' must contain positional parameter for the arguments.
+```
+
+**Usage**
+
+```
+dart my_program.dart say hello --lang en --name Jack --name John
+Hello, Jack, John! 
+```
+
+```
+dart my_program.dart say goodbye Jack John
+Goodbye, Jack, John! 
+```
+
+Another example of command-line program:
+
+```dart
+{{example/example_shell.dart}}
+```
