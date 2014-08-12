@@ -3,7 +3,7 @@ args_helper
 
 ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 
-Version: 0.0.2
+Version: 0.0.3
 
 **Prototyping**
 
@@ -103,138 +103,65 @@ commands:
 Examples of exceptions in case of deviations from the specification.
 
 ```
-ArgsHelperException: Type 'MyProgram' must have a method 'sayHelloCommand' for 'say hello' command.
+Type 'MyProgram' must have a method 'sayHelloCommand' for 'say hello' command.
 ```
 
 ```
-ArgsHelperException: Parameter 'String lang' not found in method 'sayHelloCommand'.
+Parameter 'String lang' not found in method 'sayHelloCommand'.
 ```
 
 ```
-ArgsHelperException: Method 'sayGoodbyeCommand' must contain positional parameter for the arguments.
+Method 'sayGoodbyeCommand' must contain positional parameter for the arguments.
 ```
 
 **Usage**
 
 ```
-dart my_program.dart say hello --lang en --name Jack --name John
+> my_program say hello --lang en --name Jack --name John
 Hello, Jack, John! 
 ```
 
 ```
-dart my_program.dart say goodbye Jack John
+> my_program say goodbye Jack John
 Goodbye, Jack, John! 
 ```
 
-Another example of command-line program:
+**Format**
 
-```dart
-import "package:args_helper/args_helper.dart";
-import "package:yaml/yaml.dart" as yaml;
+Format of specification is the following:
 
-void main(List<String> arguments) {
-  var configuration = yaml.loadYaml(_configuration);
-  new ArgsHelper<Program>().run(arguments, configuration);
-}
-
-class Program {
-  void pubGetCommand() {
-    _run("pub get", {}, []);
-  }
-
-  void pubInstallCommand() {
-    _run("pub install", {}, []);
-  }
-
-  void pubRunCommand(List executable) {
-    _run("pub run", {}, executable);
-  }
-
-  void pubUpgradeCommand() {
-    _run("pub upgrade", {}, []);
-  }
-
-  void pubUploaderAddCommand(List emails, {String package, String server}) {
-    var options = {};
-    if (package != null) {
-      options["package"] = package;
-    }
-
-    if (server != null) {
-      options["server"] = server;
-    }
-
-    _run("pub uploader add", options, emails);
-  }
-
-  void pubUploaderRemoveCommand(List emails, {String package, String server}) {
-    var options = {};
-    if (package != null) {
-      options["package"] = package;
-    }
-
-    if (server != null) {
-      options["server"] = server;
-    }
-
-    _run("pub uploader remove", options, emails);
-  }
-
-  void _run(String command, Map options, List arguments) {
-    print("Command: '$command'");
-    print("Options: $options");
-    print("Arguments: $arguments");
-  }
-}
-
-String _configuration =
-    '''
-name: example_shell
-description: Command line program with multiple commands.
-commands:
-  pub get:
-    description: Get all the dependencies.
-    options:    
-  pub run:
-    description: Run a Dart script from the command line.
-    rest:
-      help: Dart script with an arguments.
-      required: true
-      usage: executable [args...]
-  pub upgrade:
-    description: Get the latest versions of all the dependencies. 
-  pub uploader add:
-    aliases: ["pub add uploader"]
-    description: Add uploader for a package on pub.dartlang.org.
-    rest:        
-      help: Email addresses of the persons to add as an uploaders.
-      required: true
-      usage: emails    
-    options:
-      package:
-        help: |
-              The package whose uploaders will be modified.
-              (defaults to the current package)    
-      server:
-        help: |
-              The package server on which the package is hosted.
-              (defaults to "https://pub.dartlang.org")
-  pub uploader remove:
-    aliases: ["pub remove uploader"]
-    description: Remove uploader for a package on pub.dartlang.org.
-    rest:        
-      help: Email addresses of the persons to remove as an uploaders.
-      required: true
-      usage: emails    
-    options:
-      package:
-        help: |
-              The package whose uploaders will be modified.
-              (defaults to the current package)    
-      server:
-        help: |
-              The package server on which the package is hosted.
-              (defaults to "https://pub.dartlang.org")
-''';
-
+```yaml
+name: # name of program
+description: # description of program
+commands: # commands of program
+  command_name: # command
+    description: # description of command          
+    options: # options of command
+      option_name: # option
+    rest: # remaining arguments of command
+      help: # help on the rest
+      required: # indicates whatever required or not 
+      usage: # usage of the rest        
 ```
+
+**Option attributes**
+
+Specification of `options` is based on the `args` package.
+
+List of all supported attributes of the options:
+
+- abbr
+- allowed
+- allowedHelp
+- allowMultiple
+- defaultsTo
+- help
+- hide
+- negatable
+- valueHelp
+
+Default values of the attributes depends on the type of the option (flag or option) and used the values as in the `args` package.
+
+Additional attribute that indicates that the option is a flag or not.
+
+- isFlag

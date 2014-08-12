@@ -35,31 +35,65 @@ Source code of the program for prototyped the command specification.
 Examples of exceptions in case of deviations from the specification.
 
 ```
-ArgsHelperException: Type 'MyProgram' must have a method 'sayHelloCommand' for 'say hello' command.
+Type 'MyProgram' must have a method 'sayHelloCommand' for 'say hello' command.
 ```
 
 ```
-ArgsHelperException: Parameter 'String lang' not found in method 'sayHelloCommand'.
+Parameter 'String lang' not found in method 'sayHelloCommand'.
 ```
 
 ```
-ArgsHelperException: Method 'sayGoodbyeCommand' must contain positional parameter for the arguments.
+Method 'sayGoodbyeCommand' must contain positional parameter for the arguments.
 ```
 
 **Usage**
 
 ```
-dart my_program.dart say hello --lang en --name Jack --name John
+> my_program say hello --lang en --name Jack --name John
 Hello, Jack, John! 
 ```
 
 ```
-dart my_program.dart say goodbye Jack John
+> my_program say goodbye Jack John
 Goodbye, Jack, John! 
 ```
 
-Another example of command-line program:
+**Format**
 
-```dart
-{{example/example_shell.dart}}
+Format of specification is the following:
+
+```yaml
+name: # name of program
+description: # description of program
+commands: # commands of program
+  command_name: # command
+    description: # description of command          
+    options: # options of command
+      option_name: # option
+    rest: # remaining arguments of command
+      help: # help on the rest
+      required: # indicates whatever required or not 
+      usage: # usage of the rest        
 ```
+
+**Option attributes**
+
+Specification of `options` is based on the `args` package.
+
+List of all supported attributes of the options:
+
+- abbr
+- allowed
+- allowedHelp
+- allowMultiple
+- defaultsTo
+- help
+- hide
+- negatable
+- valueHelp
+
+Default values of the attributes depends on the type of the option (flag or option) and used the values as in the `args` package.
+
+Additional attribute that indicates that the option is a flag or not.
+
+- isFlag

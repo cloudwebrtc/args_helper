@@ -562,9 +562,13 @@ class ArgsHelper<TProgram> {
       var length = name.length;
       name = name.padRight(maxLength + 2, " ");
       var description = command.description;
+      if (description == null || description.isEmpty) {
+        description = "";
+      }
+
       sb.write(" ");
       sb.write(name);
-      sb.writeln(command.description);
+      sb.writeln(description);
     }
 
     print(sb);
@@ -627,9 +631,13 @@ class ArgsHelper<TProgram> {
       var length = name.length;
       name = name.padRight(maxLength + 2, " ");
       var description = command.description;
+      if (description == null || description.isEmpty) {
+        description = "";
+      }
+
       sb.write(" ");
       sb.write(name);
-      sb.writeln(command.description);
+      sb.writeln(description);
     }
 
     print(sb);

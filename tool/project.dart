@@ -6,7 +6,6 @@ import "package:file_utils/file_utils.dart";
 
 const String CHANGE_LOG = "tool/change.log";
 const String CHANGELOG_MD = "CHANGELOG.md";
-const String EXAMPLE_SHELL_DART = "example/example_shell.dart";
 const String MY_PROGRAM_DART = "example/my_program.dart";
 const String MY_PROGRAM_YAML = "example/my_program.yaml";
 const String PUBSPEC_YAML = "pubspec.yaml";
@@ -28,8 +27,8 @@ void main(List<String> args) {
     FileUtils.touch([t.name], create: true);
   });
 
-  file(README_MD, [README_MD_IN, EXAMPLE_SHELL_DART, MY_PROGRAM_DART,
-      MY_PROGRAM_YAML], (Target t, Map args) {
+  file(README_MD, [README_MD_IN, MY_PROGRAM_DART, MY_PROGRAM_YAML], (Target
+      t, Map args) {
     var sources = t.sources.toList();
     var template = new File(sources.removeAt(0)).readAsStringSync();
     for (var filename in sources) {
