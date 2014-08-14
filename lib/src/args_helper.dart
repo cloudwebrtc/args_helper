@@ -16,6 +16,10 @@ class ArgsHelper<TProgram> {
 
   String _description;
 
+  bool _hasErrors;
+
+  Logger _logger;
+
   String _name;
 
   /**
@@ -49,6 +53,7 @@ class ArgsHelper<TProgram> {
     _configuration = new Map.from(configuration);
     _parseHeader();
     _parseCommands();
+    _checkFoundErrors();
     _execute();
   }
 
@@ -71,6 +76,13 @@ class ArgsHelper<TProgram> {
     return new String.fromCharCodes(charCodes);
   }
 
+  void _checkFoundErrors() {
+    if (_hasErrors) {
+      throw new ArgsHelperException(
+          "Found an errors in the configuration of '$TProgram'.");
+    }
+  }
+
   void _checkMethod(String commandName, Map<String, Option> options, ArgsRest
       rest) {
     var method = _findMethodByCommandName(commandName);
@@ -78,9 +90,10 @@ class ArgsHelper<TProgram> {
       var methodName = _getMethodNameForCommand(commandName);
       var className = MirrorSystem.getName(reflect(this
           ).type.typeArguments.first.simpleName);
-      throw new ArgsHelperException(
-          "Type '$className' must have a method '$methodName' for '$commandName' command."
-          );
+      var message =
+          "Type '$className' must have a method '$methodName' for '$commandName' command.";
+      _logError(message);
+      return;
     }
 
     var methodName = MirrorSystem.getName(method.simpleName);
@@ -88,24 +101,26 @@ class ArgsHelper<TProgram> {
     if (rest != null) {
       if (parameters.isEmpty || parameters.first.isOptional ||
           parameters.first.isNamed) {
-        throw new ArgsHelperException(
-            "Method '$methodName' must contain positional parameter for the arguments.");
+        var message =
+            "Method '$methodName' must contain positional parameter for the arguments.";
+        _logError(message);
       }
 
       var parameter = parameters.removeAt(0);
       if (!parameter.type.isAssignableTo(reflectType(List))) {
         var simpleName = MirrorSystem.getName(parameter.simpleName);
-        throw new ArgsHelperException(
-            "Parameter '$simpleName' in '$methodName' must be assignable to the 'List' type."
-            );
+        var message =
+            "Parameter '$simpleName' in '$methodName' must be assignable to the 'List' type.";
+        _logError(message);
       }
     }
 
     for (var parameter in parameters) {
       if (!parameter.isNamed) {
         var simpleName = MirrorSystem.getName(parameter.simpleName);
-        throw new ArgsHelperException(
-            "Method '$methodName' must not contain positional parameter '$simpleName'.");
+        var message =
+            "Method '$methodName' must not contain positional parameter '$simpleName'.";
+        _logError(message);
       }
     }
 
@@ -136,22 +151,25 @@ class ArgsHelper<TProgram> {
           found = true;
           if (!parameter.type.isAssignableTo(reflectType(type))) {
             var parameterType = parameter.type.reflectedType;
-            throw new ArgsHelperException(
-                "Parameter '$parameterType $optionName' in method '$methodName' must be assignable to the '$type' type."
-                );
+            var message =
+                "Parameter '$parameterType $optionName' in method '$methodName' must be assignable to the '$type' type.";
+            _logError(message);
           }
         }
       }
 
       if (!found) {
-        throw new ArgsHelperException(
-            "Parameter '$type $optionName' not found in method '$methodName'.");
+        var message =
+            "Parameter '$type $optionName' not found in method '$methodName'.";
+        _logError(message);
+
       }
     }
 
     if (!unbound.isEmpty) {
-      throw new ArgsHelperException(
-          "Parameter '${unbound.first}' in '$methodName' has no associated option.");
+      var message =
+          "Parameter '${unbound.first}' in '$methodName' has no associated option.";
+      _logError(message);
     }
   }
 
@@ -393,6 +411,11 @@ class ArgsHelper<TProgram> {
     return parts.join(separator);
   }
 
+  void _logError(String message) {
+    _hasErrors = true;
+    _logger.shout(message);
+  }
+
   String _normalizeCommandName(String commandName) {
     var parts = <String>[];
     for (var part in commandName.trim().split(" ")) {
@@ -531,7 +554,12 @@ class ArgsHelper<TProgram> {
     _command = null;
     _configuration = {};
     _description = null;
+    _hasErrors = false;
+    _logger = new Logger("ArgsHelper");
     _name = null;
+    _logger.onRecord.listen((LogRecord record) {
+      print(record.message);
+    });
   }
 
   void _usage() {
