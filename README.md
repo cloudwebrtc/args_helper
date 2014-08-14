@@ -3,7 +3,7 @@ args_helper
 
 ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 
-Version: 0.0.5
+Version: 0.0.6
 
 **Prototyping**
 
@@ -21,6 +21,7 @@ commands:
       name:
         help: Your names
         allowMultiple: true
+        required: true
       lang:
         help: Say hello in language
         allowed: [en, ru]
@@ -66,8 +67,7 @@ class MyProgram {
         break;
     }
 
-    var people = (name == null ? ["brother"] : name).join(", ");
-    print("$hello, $people!");
+    print("$hello, ${name.join(", ")}!");
   }
 
   void sayGoodbyeCommand(List names) {
@@ -86,7 +86,8 @@ commands:
     options:
       name:
         help: Your names
-        allowMultiple: true       
+        allowMultiple: true
+        required: true       
       lang:
         help: Say hello in language
         allowed: [en, ru]

@@ -7,6 +7,7 @@ commands:
       name:
         help: Your names
         allowMultiple: true
+        required: true
       lang:
         help: Say hello in language
         allowed: [en, ru]

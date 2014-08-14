@@ -1,3 +1,7 @@
+## 0.0.6
+
+- Modified `example/my_program.dart` for demonstration the option attribute `required` 
+
 ## 0.0.5
 
 - Added an attribute `required` to the command option
