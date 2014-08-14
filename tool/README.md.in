@@ -94,6 +94,7 @@ List of all supported attributes of the options:
 
 Default values of the attributes depends on the type of the option (flag or option) and used the values as in the `args` package.
 
-Additional attribute that indicates that the option is a flag or not.
+Additional attributes:
 
-- isFlag
+- `isFlag` indicates that the option is a flag or not
+- `required` indicates that the option is required or not
