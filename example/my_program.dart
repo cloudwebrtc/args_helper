@@ -35,7 +35,7 @@ commands:
     description: Says hello
     options:
       name:
-        help: Your names
+        help: Your name
         allowMultiple: true
         required: true       
       lang:
