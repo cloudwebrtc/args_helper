@@ -3,7 +3,7 @@ args_helper
 
 ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 
-Version: 0.0.7
+Version: 0.0.8
 
 **Prototyping**
 
@@ -140,8 +140,11 @@ commands: # commands of program
     description: # description of command          
     options: # options of command
       option_name: # option
+        # option attributes
     rest: # remaining arguments of command
+      allowMultiple # Indicates that multiple arguments allowed or not
       help: # help on the rest
+      name: # name used for generating the string "usage"
       required: # indicates whatever required or not 
       usage: # usage of the rest        
 ```
@@ -168,3 +171,15 @@ Additional attributes:
 
 - `isFlag` indicates that the option is a flag or not
 - `required` indicates that the option is required or not
+
+**Rest attributes**
+
+The `rest` attribute of the command used for configuring the remaining command arguments (rest).
+
+List of the `rest `attributes:
+
+- `allowMultiple` indicates that multiple arguments allowed or not
+- `help` text on these remaining arguments
+- `name` used for generating the string "usage"
+- `required` indicates that the remaining arguments are required or not
+- `usage` text on these remaining arguments

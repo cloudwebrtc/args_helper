@@ -5,3 +5,4 @@
 0.0.5 Added an attribute `required` to the command option
 0.0.6 Modified `example/my_program.dart` for demonstration the option attribute `required` 
 0.0.7 Added an attribute `allowMultiple` to the remaining arguments (rest)
+0.0.8 Updated specification (`rest.allowMultiple`, `rest.name`)
