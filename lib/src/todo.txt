@@ -1,3 +1,2 @@
 Global options.
 Help on arguments (rest).
-Add `allowMultilpe:true` attribute to `rest`

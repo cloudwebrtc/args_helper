@@ -15,5 +15,6 @@ commands:
   say goodbye:
     description: Says goodbye
     rest:
-      usage: names
+      allowMultiple: false
+      name: name
       required: true

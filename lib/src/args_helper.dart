@@ -109,10 +109,17 @@ class ArgsHelper<TProgram> {
       }
 
       var parameter = parameters.removeAt(0);
-      if (!parameter.type.isAssignableTo(reflectType(List))) {
+      Type type;
+      if (rest.allowMultiple) {
+        type = List;
+      } else {
+        type = String;
+      }
+
+      if (!parameter.type.isAssignableTo(reflectType(type))) {
         var simpleName = MirrorSystem.getName(parameter.simpleName);
         var message =
-            "Parameter '$simpleName' in '$methodName' must be assignable to the 'List' type.";
+            "Parameter '$simpleName' in '$methodName' must be assignable to the '$type' type.";
         _logError(message);
       }
     }
@@ -331,12 +338,12 @@ class ArgsHelper<TProgram> {
       for (var optionName in requiredOptions) {
         if (!argResults.wasParsed(optionName)) {
           print("Missing required command option '$optionName'.");
-          print("");
           found = true;
         }
       }
 
       if (found) {
+        print("");
         _usageForCommand(command, argResults);
         return;
       }
@@ -345,6 +352,13 @@ class ArgsHelper<TProgram> {
     var commandRest = command.rest;
     var argRest = argResults.rest;
     if (commandRest != null) {
+      if (argRest.length > 1 && !commandRest.allowMultiple) {
+        print("Command '$commandName' does not allow multiple arguments.");
+        print("");
+        _usageForCommand(command, argResults);
+        return;
+      }
+
       // Remaining arguments (rest) required
       if (argRest.isEmpty && commandRest.required) {
         print("Command '$commandName' requires an arguments.");
@@ -372,7 +386,15 @@ class ArgsHelper<TProgram> {
     var positionalArguments = [];
     var parameters = method.parameters;
     if (command.rest != null) {
-      positionalArguments.add(argResults.rest);
+      if (command.rest.allowMultiple) {
+        positionalArguments.add(argResults.rest);
+      } else {
+        if (argResults.rest.isEmpty) {
+          positionalArguments.add(null);
+        } else {
+          positionalArguments.add(argResults.rest.first);
+        }
+      }
     }
 
     for (var optionName in argResults.options) {
@@ -471,10 +493,14 @@ class ArgsHelper<TProgram> {
     if (restSection != null) {
       var restParent = parent.toList();
       restParent.add("rest");
+      var allowMultiple = _configGetBool(restSection, "allowMultiple", true,
+          restParent);
       var help = _configGetString(restSection, "help", null, restParent);
+      var name = _configGetString(restSection, "name", null, restParent);
       var required = _configGetBool(restSection, "required", false, restParent);
       var usage = _configGetString(restSection, "usage", null, restParent);
-      rest = new ArgsRest(help: help, required: required, usage: usage);
+      rest = new ArgsRest(allowMultiple: allowMultiple, help: help, name: name,
+          required: required, usage: usage);
     }
 
     var parser = new ArgParser();
@@ -773,9 +799,19 @@ class ArgsCommand {
  */
 class ArgsRest {
   /**
+   * Indicates that multiple arguments allowed or not.
+   */
+  bool allowMultiple;
+
+  /**
    * Help text on these remaining arguments.
    */
   final String help;
+
+  /**
+   * Name used for generating the string "usage".
+   */
+  String name;
 
   /**
    * Indicates that the remaining arguments are required.
@@ -787,21 +823,29 @@ class ArgsRest {
    */
   final String usage;
 
-  ArgsRest({this.help, this.required, this.usage});
+  ArgsRest({this.allowMultiple, this.help, this.name, this.required, this.usage});
 
   /**
    * Returns the string representation.
    */
   String toString() {
+    if (usage != null && !usage.isEmpty) {
+      return usage;
+    }
+
+    var argument = "argument";
+    if (name != null && !name.isEmpty) {
+      argument = name;
+    }
+
     var sb = new StringBuffer();
     if (!required) {
       sb.write("[");
     }
 
-    if (usage == null || usage.isEmpty) {
-      sb.write("arguments");
-    } else {
-      sb.write(usage);
+    sb.write(argument);
+    if (allowMultiple) {
+      sb.write(" ...");
     }
 
     if (!required) {
@@ -809,6 +853,5 @@ class ArgsRest {
     }
 
     return sb.toString();
-
   }
 }

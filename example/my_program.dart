@@ -21,9 +21,8 @@ class MyProgram {
     print("$hello, ${name.join(", ")}!");
   }
 
-  void sayGoodbyeCommand(List names) {
-    var people = names.join(", ");
-    print("Goodbye, $people!");
+  void sayGoodbyeCommand(String name) {
+    print("Goodbye, ${name}!");
   }
 }
 
@@ -46,6 +45,7 @@ commands:
   say goodbye:
     description: Says goodbye
     rest:
-      usage: names
+      allowMultiple: false
+      name: name
       required: true      
 ''';

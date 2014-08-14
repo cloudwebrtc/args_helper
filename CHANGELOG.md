@@ -1,3 +1,7 @@
+## 0.0.7
+
+- Added an attribute `allowMultiple` to the remaining arguments (rest)
+
 ## 0.0.6
 
 - Modified `example/my_program.dart` for demonstration the option attribute `required` 

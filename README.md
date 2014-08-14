@@ -3,7 +3,7 @@ args_helper
 
 ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 
-Version: 0.0.6
+Version: 0.0.7
 
 **Prototyping**
 
@@ -29,7 +29,8 @@ commands:
   say goodbye:
     description: Says goodbye
     rest:
-      usage: names
+      allowMultiple: false
+      name: name
       required: true        
 ```
 
@@ -70,9 +71,8 @@ class MyProgram {
     print("$hello, ${name.join(", ")}!");
   }
 
-  void sayGoodbyeCommand(List names) {
-    var people = names.join(", ");
-    print("Goodbye, $people!");
+  void sayGoodbyeCommand(String name) {
+    print("Goodbye, ${name}!");
   }
 }
 
@@ -95,7 +95,8 @@ commands:
   say goodbye:
     description: Says goodbye
     rest:
-      usage: names
+      allowMultiple: false
+      name: name
       required: true      
 ''';
 
