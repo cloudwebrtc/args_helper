@@ -3,7 +3,7 @@ args_helper
 
 ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 
-Version: 0.0.4
+Version: 0.0.5
 
 **Prototyping**
 
@@ -86,7 +86,7 @@ commands:
     options:
       name:
         help: Your names
-        allowMultiple: true
+        allowMultiple: true       
       lang:
         help: Say hello in language
         allowed: [en, ru]

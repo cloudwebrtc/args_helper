@@ -22,6 +22,8 @@ class ArgsHelper<TProgram> {
 
   String _name;
 
+  Map<String, Set<String>> _requiredOptions;
+
   /**
    * Returns the arguments.
    */
@@ -323,6 +325,23 @@ class ArgsHelper<TProgram> {
       }
     }
 
+    var requiredOptions = _getRequiredOptions(command);
+    if (!requiredOptions.isEmpty) {
+      var found = false;
+      for (var optionName in requiredOptions) {
+        if (!argResults.wasParsed(optionName)) {
+          print("Missing required command option '$optionName'.");
+          print("");
+          found = true;
+        }
+      }
+
+      if (found) {
+        _usageForCommand(command, argResults);
+        return;
+      }
+    }
+
     var commandRest = command.rest;
     var argRest = argResults.rest;
     if (commandRest != null) {
@@ -393,6 +412,19 @@ class ArgsHelper<TProgram> {
     return commandName + "Command";
   }
 
+  List<String> _getRequiredOptions(ArgsCommand command) {
+    if (command.original != null) {
+      command = command.original;
+    }
+
+    var options = _requiredOptions[command.name];
+    if (options == null) {
+      return <String>[];
+    } else {
+      return options.toList();
+    }
+  }
+
   String _getScriptName() {
     if (_name != null && !_name.isEmpty) {
       return _name;
@@ -454,7 +486,8 @@ class ArgsHelper<TProgram> {
       options = {};
     }
 
-    _parseOptions(options, parser, ["commands", commandName, "options"]);
+    _parseOptions(command, options, parser, ["commands", commandName, "options"]
+        );
     if (!parser.options.containsKey("help")) {
       parser.addFlag("help", abbr: "h", help:
           "Print usage information for this command.", negatable: false);
@@ -499,7 +532,8 @@ class ArgsHelper<TProgram> {
     _name = _configGetString(_configuration, "name", null, []);
   }
 
-  void _parseOptions(Map options, ArgParser parser, List parents) {
+  void _parseOptions(ArgsCommand command, Map options, ArgParser parser, List
+      parents) {
     for (var optionName in options.keys) {
       optionName = "$optionName";
       var parent = <String>[];
@@ -543,6 +577,18 @@ class ArgsHelper<TProgram> {
         parser.addOption(optionName, abbr: abbr, allowed: allowed, allowedHelp:
             allowedHelp, allowMultiple: allowMultiple, defaultsTo: defaultsTo, help: help,
             hide: hide, valueHelp: valueHelp);
+
+        var required = _configGetBool(option, "required", false, parent);
+        if (required) {
+          var commandName = command.name;
+          var options = _requiredOptions[commandName];
+          if (options == null) {
+            options = new Set<String>();
+            _requiredOptions[commandName] = options;
+          }
+
+          options.add(optionName);
+        }
       }
     }
   }
@@ -557,6 +603,7 @@ class ArgsHelper<TProgram> {
     _hasErrors = false;
     _logger = new Logger("ArgsHelper");
     _name = null;
+    _requiredOptions = <String, Set<String>> {};
     _logger.onRecord.listen((LogRecord record) {
       print(record.message);
     });
@@ -704,7 +751,7 @@ class ArgsCommand {
   /**
    * Original command if this command are an alias.
    */
-  ArgsCommand original;
+  final ArgsCommand original;
 
   /**
    * Remaining arguments descriptor.

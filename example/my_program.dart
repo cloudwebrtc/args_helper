@@ -38,7 +38,7 @@ commands:
     options:
       name:
         help: Your names
-        allowMultiple: true
+        allowMultiple: true       
       lang:
         help: Say hello in language
         allowed: [en, ru]
