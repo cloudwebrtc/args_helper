@@ -30,7 +30,7 @@ String _configuration =
     '''
 name: my_program
 description: My program
-commands:
+commands:  
   say hello:
     description: Says hello
     options:

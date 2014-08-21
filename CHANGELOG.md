@@ -1,3 +1,7 @@
+## 0.0.9
+
+- Fixed bug (check the medhod parameter for `rest`) in `ArgsHelper._checkMethod()`
+
 ## 0.0.8
 
 - Updated specification (`rest.allowMultiple`, `rest.name`)

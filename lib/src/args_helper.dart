@@ -101,25 +101,26 @@ class ArgsHelper<TProgram> {
     var methodName = MirrorSystem.getName(method.simpleName);
     var parameters = method.parameters.toList();
     if (rest != null) {
-      if (parameters.isEmpty || parameters.first.isOptional ||
-          parameters.first.isNamed) {
+      var foundRestParameter = !parameters.isEmpty &&
+          !(parameters.first.isOptional || parameters.first.isNamed);
+      if (foundRestParameter) {
+        var parameter = parameters.removeAt(0);
+        Type type;
+        if (rest.allowMultiple) {
+          type = List;
+        } else {
+          type = String;
+        }
+
+        if (!parameter.type.isAssignableTo(reflectType(type))) {
+          var simpleName = MirrorSystem.getName(parameter.simpleName);
+          var message =
+              "Parameter '$simpleName' in '$methodName' must be assignable to the '$type' type.";
+          _logError(message);
+        }
+      } else {
         var message =
             "Method '$methodName' must contain positional parameter for the arguments.";
-        _logError(message);
-      }
-
-      var parameter = parameters.removeAt(0);
-      Type type;
-      if (rest.allowMultiple) {
-        type = List;
-      } else {
-        type = String;
-      }
-
-      if (!parameter.type.isAssignableTo(reflectType(type))) {
-        var simpleName = MirrorSystem.getName(parameter.simpleName);
-        var message =
-            "Parameter '$simpleName' in '$methodName' must be assignable to the '$type' type.";
         _logError(message);
       }
     }
