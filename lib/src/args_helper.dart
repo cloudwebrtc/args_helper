@@ -8,21 +8,11 @@ class ArgsHelper<TProgram> {
 
   static ArgsCommand _command;
 
-  Map<String, List<String>> _aliases;
-
-  Map<String, ArgsCommand> _commands;
-
-  Map _configuration;
-
-  String _description;
-
   bool _hasErrors;
 
   Logger _logger;
 
-  String _name;
-
-  Map<String, Set<String>> _requiredOptions;
+  ArgsShell _shell;
 
   /**
    * Returns the arguments.
@@ -52,9 +42,8 @@ class ArgsHelper<TProgram> {
 
     _reset();
     _arguments = arguments.toList();
-    _configuration = new Map.from(configuration);
-    _parseHeader();
-    _parseCommands();
+    _parse(new Map.from(configuration));
+    _checkMethods();
     _checkFoundErrors();
     _execute();
   }
@@ -78,22 +67,26 @@ class ArgsHelper<TProgram> {
     return new String.fromCharCodes(charCodes);
   }
 
-  void _checkFoundErrors() {
-    if (_hasErrors) {
-      throw new ArgsHelperException(
-          "Found an errors in the configuration of '$TProgram'.");
+  void _checkMethods() {
+    for (var command in _shell.commands.values) {
+      if (command.original == null) {
+        _checkMethod(command.name, command.argParser.options, command.rest);
+      }
     }
   }
 
-  void _checkMethod(String commandName, Map<String, Option> options, ArgsRest
-      rest) {
+  void _checkFoundErrors() {
+    if (_hasErrors) {
+      throw new ArgsHelperException("Found an errors in the configuration of '$TProgram'.");
+    }
+  }
+
+  void _checkMethod(String commandName, Map<String, Option> options, ArgsRest rest) {
     var method = _findMethodByCommandName(commandName);
     if (method == null) {
       var methodName = _getMethodNameForCommand(commandName);
-      var className = MirrorSystem.getName(reflect(this
-          ).type.typeArguments.first.simpleName);
-      var message =
-          "Type '$className' must have a method '$methodName' for '$commandName' command.";
+      var className = MirrorSystem.getName(reflect(this).type.typeArguments.first.simpleName);
+      var message = "Type '$className' must have a method '$methodName' for '$commandName' command.";
       _logError(message);
       return;
     }
@@ -101,8 +94,7 @@ class ArgsHelper<TProgram> {
     var methodName = MirrorSystem.getName(method.simpleName);
     var parameters = method.parameters.toList();
     if (rest != null) {
-      var foundRestParameter = !parameters.isEmpty &&
-          !(parameters.first.isOptional || parameters.first.isNamed);
+      var foundRestParameter = !parameters.isEmpty && !(parameters.first.isOptional || parameters.first.isNamed);
       if (foundRestParameter) {
         var parameter = parameters.removeAt(0);
         Type type;
@@ -114,13 +106,11 @@ class ArgsHelper<TProgram> {
 
         if (!parameter.type.isAssignableTo(reflectType(type))) {
           var simpleName = MirrorSystem.getName(parameter.simpleName);
-          var message =
-              "Parameter '$simpleName' in '$methodName' must be assignable to the '$type' type.";
+          var message = "Parameter '$simpleName' in '$methodName' must be assignable to the '$type' type.";
           _logError(message);
         }
       } else {
-        var message =
-            "Method '$methodName' must contain positional parameter for the arguments.";
+        var message = "Method '$methodName' must contain positional parameter for the arguments.";
         _logError(message);
       }
     }
@@ -128,8 +118,7 @@ class ArgsHelper<TProgram> {
     for (var parameter in parameters) {
       if (!parameter.isNamed) {
         var simpleName = MirrorSystem.getName(parameter.simpleName);
-        var message =
-            "Method '$methodName' must not contain positional parameter '$simpleName'.";
+        var message = "Method '$methodName' must not contain positional parameter '$simpleName'.";
         _logError(message);
       }
     }
@@ -161,101 +150,23 @@ class ArgsHelper<TProgram> {
           found = true;
           if (!parameter.type.isAssignableTo(reflectType(type))) {
             var parameterType = parameter.type.reflectedType;
-            var message =
-                "Parameter '$parameterType $optionName' in method '$methodName' must be assignable to the '$type' type.";
+            var message = "Parameter '$parameterType $optionName' in method '$methodName' must be assignable to the '$type' type.";
             _logError(message);
           }
         }
       }
 
       if (!found) {
-        var message =
-            "Parameter '$type $optionName' not found in method '$methodName'.";
+        var message = "Parameter '$type $optionName' not found in method '$methodName'.";
         _logError(message);
 
       }
     }
 
     if (!unbound.isEmpty) {
-      var message =
-          "Parameter '${unbound.first}' in '$methodName' has no associated option.";
+      var message = "Parameter '${unbound.first}' in '$methodName' has no associated option.";
       _logError(message);
     }
-  }
-
-  bool _configGetBool(Map config, String name, bool defaultValue, List<String>
-      parents) {
-    var value = config[name];
-    if (value is bool) {
-      return value;
-    }
-
-    if (value == null) {
-      return defaultValue;
-    }
-
-    _errorSectionTypeMismatch(name, bool, parents);
-    return null;
-  }
-
-  List _configGetList(Map config, String name, List defaultValue, List<String>
-      parents) {
-    var value = config[name];
-    if (value is List) {
-      return value;
-    }
-
-    if (value == null) {
-      return defaultValue;
-    }
-
-    _errorSectionTypeMismatch(name, List, parents);
-    return null;
-  }
-
-  Map _configGetMap(Map config, String name, Map defaultValue, List<String>
-      parents) {
-    var value = config[name];
-    if (value is Map) {
-      return value;
-    }
-
-    if (value == null) {
-      return defaultValue;
-    }
-
-    _errorSectionTypeMismatch(name, Map, parents);
-    return null;
-  }
-
-  String _configGetString(Map config, String name, String
-      defaultValue, List<String> parents) {
-    var value = config[name];
-    if (value is String) {
-      return value;
-    }
-
-    if (value == null) {
-      return defaultValue;
-    }
-
-    _errorSectionTypeMismatch(name, String, parents);
-    return null;
-  }
-
-  ArgsCommand _createCommandAlias(String commandName, ArgsCommand original) {
-    var command = new ArgsCommand(argParser: original.argParser, description:
-        original.description, name: commandName, original: original, rest: original.rest
-        );
-    return command;
-  }
-
-  void _errorSectionTypeMismatch(String name, Type type, List<String> parents) {
-    var parts = parents.toList();
-    parts.add(name);
-    var section = _getSectionName(parts);
-    throw new ArgsHelperException("Section '$section' must be of type '$type'."
-        );
   }
 
   void _execute() {
@@ -274,8 +185,8 @@ class ArgsHelper<TProgram> {
         commandName = "$commandName $argument";
       }
 
-      if (_commands.containsKey(commandName)) {
-        _command = _commands[commandName];
+      if (_shell.commands.containsKey(commandName)) {
+        _command = _shell.commands[commandName];
         lastIndex = index;
       }
     }
@@ -333,7 +244,7 @@ class ArgsHelper<TProgram> {
       }
     }
 
-    var requiredOptions = _getRequiredOptions(command);
+    var requiredOptions = command.requiredOptions;
     if (!requiredOptions.isEmpty) {
       var found = false;
       for (var optionName in requiredOptions) {
@@ -385,8 +296,7 @@ class ArgsHelper<TProgram> {
     _executeCommand(command, method, argResults);
   }
 
-  void _executeCommand(ArgsCommand command, MethodMirror method, ArgResults
-      argResults) {
+  void _executeCommand(ArgsCommand command, MethodMirror method, ArgResults argResults) {
     var program = reflectClass(TProgram).newInstance(new Symbol(""), []);
     var namedArguments = {};
     var positionalArguments = [];
@@ -425,7 +335,7 @@ class ArgsHelper<TProgram> {
 
   List<String> _findSubcommands(String commandName) {
     var subcommands = <String>[];
-    for (var key in _commands.keys) {
+    for (var key in _shell.commands.keys) {
       if (key.startsWith(commandName)) {
         subcommands.add(key);
       }
@@ -440,22 +350,9 @@ class ArgsHelper<TProgram> {
     return commandName + "Command";
   }
 
-  List<String> _getRequiredOptions(ArgsCommand command) {
-    if (command.original != null) {
-      command = command.original;
-    }
-
-    var options = _requiredOptions[command.name];
-    if (options == null) {
-      return <String>[];
-    } else {
-      return options.toList();
-    }
-  }
-
   String _getScriptName() {
-    if (_name != null && !_name.isEmpty) {
-      return _name;
+    if (_shell.name != null && !_shell.name.isEmpty) {
+      return _shell.name;
     }
 
     var script = Platform.script.toFilePath();
@@ -487,155 +384,17 @@ class ArgsHelper<TProgram> {
     return parts.join(" ");
   }
 
-  ArgsCommand _parseCommand(String commandName, Map section, List parents) {
-    var parent = <String>[];
-    parent.addAll(parents);
-    parent.add(commandName);
-    var options = _configGetMap(section, "options", {}, parent);
-    var description = _configGetString(section, "description", "", parent);
-    var aliases = _configGetList(section, "aliases", [], parent);
-    var restSection = _configGetMap(section, "rest", null, parent);
-    ArgsRest rest;
-    if (restSection != null) {
-      var restParent = parent.toList();
-      restParent.add("rest");
-      var allowMultiple = _configGetBool(restSection, "allowMultiple", true,
-          restParent);
-      var help = _configGetString(restSection, "help", null, restParent);
-      var name = _configGetString(restSection, "name", null, restParent);
-      var required = _configGetBool(restSection, "required", false, restParent);
-      var usage = _configGetString(restSection, "usage", null, restParent);
-      rest = new ArgsRest(allowMultiple: allowMultiple, help: help, name: name,
-          required: required, usage: usage);
-    }
-
-    var parser = new ArgParser();
-    var command = new ArgsCommand(argParser: parser, description: description,
-        name: commandName, rest: rest);
-    _commands[commandName] = command;
-
-    if (options == null) {
-      options = {};
-    }
-
-    _parseOptions(command, options, parser, ["commands", commandName, "options"]
-        );
-    if (!parser.options.containsKey("help")) {
-      parser.addFlag("help", abbr: "h", help:
-          "Print usage information for this command.", negatable: false);
-    }
-
-    _checkMethod(commandName, parser.options, rest);
-    return command;
-  }
-
-  void _parseCommands() {
-    Map commands = _configGetMap(_configuration, "commands", null, []);
-    if (commands == null) {
-      throw new ArgsHelperException("Section 'commands' not found.");
-    }
-
-    for (var key in commands.keys) {
-      key = "$key";
-      var parent = ["commands"];
-      var commandName = _normalizeCommandName(key);
-      if (commandName.isEmpty) {
-        throw new ArgsHelperException("Command must have a name.");
-      }
-
-      var commandSection = _configGetMap(commands, key, {}, parent);
-      var command = _parseCommand(commandName, commandSection, parent);
-      _commands[commandName] = command;
-      var aliasesParent = <String>[];
-      aliasesParent.addAll(parent);
-      aliasesParent.add(key);
-      var aliases = _configGetList(commandSection, "aliases", [], aliasesParent
-          );
-      for (var alias in aliases) {
-        alias = "$alias";
-        var commandName = _normalizeCommandName(alias);
-        _commands[commandName] = _createCommandAlias(commandName, command);
-      }
-    }
-  }
-
-  void _parseHeader() {
-    _description = _configGetString(_configuration, "description", null, []);
-    _name = _configGetString(_configuration, "name", null, []);
-  }
-
-  void _parseOptions(ArgsCommand command, Map options, ArgParser parser, List
-      parents) {
-    for (var optionName in options.keys) {
-      optionName = "$optionName";
-      var parent = <String>[];
-      parent.addAll(parents);
-      parent.add(optionName);
-      var option = _configGetMap(options, optionName, {}, parent);
-      var abbr = _configGetString(option, "abbr", null, parent);
-      var help = _configGetString(option, "help", null, parent);
-      var hide = _configGetBool(option, "hide", false, parent);
-      var isFlag = _configGetBool(option, "isFlag", false, parent);
-      if (isFlag) {
-        var defaultsTo = _configGetBool(option, "defaultsTo", false, parent);
-        var negatable = _configGetBool(option, "negatable", true, parent);
-        parser.addFlag(optionName, abbr: abbr, defaultsTo: defaultsTo, help:
-            help, hide: hide, negatable: negatable);
-      } else {
-        var allowed = <String>[];
-        for (var element in _configGetList(option, "allowed", [], parent)) {
-          allowed.add(element.toString());
-        }
-
-        if (allowed.isEmpty) {
-          allowed = null;
-        }
-
-        var allowedHelp = <String, String> {};
-        Map allowedHelpSection = _configGetMap(option, "allowedHelp", {}, parent
-            );
-        for (var key in allowedHelpSection.keys) {
-          allowedHelp[key.toString()] = allowedHelpSection[key].toString();
-        }
-
-        if (allowedHelp.isEmpty) {
-          allowedHelp = null;
-        }
-
-        var allowMultiple = _configGetBool(option, "allowMultiple", false,
-            parent);
-        var defaultsTo = _configGetString(option, "defaultsTo", null, parent);
-        var valueHelp = _configGetString(option, "valueHelp", null, parent);
-        parser.addOption(optionName, abbr: abbr, allowed: allowed, allowedHelp:
-            allowedHelp, allowMultiple: allowMultiple, defaultsTo: defaultsTo, help: help,
-            hide: hide, valueHelp: valueHelp);
-
-        var required = _configGetBool(option, "required", false, parent);
-        if (required) {
-          var commandName = command.name;
-          var options = _requiredOptions[commandName];
-          if (options == null) {
-            options = new Set<String>();
-            _requiredOptions[commandName] = options;
-          }
-
-          options.add(optionName);
-        }
-      }
-    }
+  void _parse(Map configuration) {
+    var parser = new ArgsParser();
+    _shell = parser.parse(configuration);
   }
 
   void _reset() {
     _arguments = <String>[];
-    _aliases = <String, List<String>> {};
-    _commands = <String, ArgsCommand> {};
     _command = null;
-    _configuration = {};
-    _description = null;
     _hasErrors = false;
     _logger = new Logger("ArgsHelper");
-    _name = null;
-    _requiredOptions = <String, Set<String>> {};
+    _shell = null;
     _logger.onRecord.listen((LogRecord record) {
       print(record.message);
     });
@@ -643,22 +402,21 @@ class ArgsHelper<TProgram> {
 
   void _usage() {
     var sb = new StringBuffer();
-    if (_description != null && !_description.isEmpty) {
-      sb.writeln(_description);
+    if (_shell.description != null && !_shell.description.isEmpty) {
+      sb.writeln(_shell.description);
     }
 
     sb.write("Usage: ");
     sb.write(_getScriptName());
     sb.writeln(" command [options] [arguments]");
 
-    if (!_commands.isEmpty) {
+    if (!_shell.commands.isEmpty) {
       sb.writeln("List of available commands:");
     }
 
-    var commands = _commands.values.toList();
+    var commands = _shell.commands.values.toList();
     commands.sort((a, b) => a.name.compareTo(b.name));
-    int maxLength = commands.fold(0, (l, e) => e.name.length > l ? e.name.length
-        : l);
+    int maxLength = commands.fold(0, (l, e) => e.name.length > l ? e.name.length : l);
 
     for (var command in commands) {
       var name = command.name;
@@ -716,8 +474,8 @@ class ArgsHelper<TProgram> {
 
   void _usageForSubcommands(String commandName, List<String> subcommands) {
     var sb = new StringBuffer();
-    if (_description != null && !_description.isEmpty) {
-      sb.writeln(_description);
+    if (_shell.description != null && !_shell.description.isEmpty) {
+      sb.writeln(_shell.description);
     }
 
     sb.write("Usage: ");
@@ -729,7 +487,7 @@ class ArgsHelper<TProgram> {
     int maxLength = keys.fold(0, (l, e) => e.length > l ? e.length : l);
     keys = keys.where((e) => e.startsWith(commandName)).toList();
     for (var key in keys) {
-      var command = _commands[key];
+      var command = _shell.commands[key];
       if (command == null) {
         continue;
       }
@@ -762,7 +520,7 @@ class ArgsHelperException implements Exception {
 }
 
 /**
- * Arguments command description.
+ * Command descriptor.
  */
 class ArgsCommand {
   /**
@@ -786,11 +544,16 @@ class ArgsCommand {
   final ArgsCommand original;
 
   /**
+   * Required options.
+   */
+  final Set<String> requiredOptions;
+
+  /**
    * Remaining arguments descriptor.
    */
   final ArgsRest rest;
 
-  ArgsCommand({this.argParser, this.description, this.name, this.original, this.rest});
+  ArgsCommand({this.argParser, this.description, this.name, this.original, this.requiredOptions, this.rest});
 
   /**
     * Returns the string representation.
@@ -860,4 +623,26 @@ class ArgsRest {
 
     return sb.toString();
   }
+}
+
+/**
+ * Command shell descriptor.
+ */
+class ArgsShell {
+  /**
+   * Shell commands.
+   */
+  final Map<String, ArgsCommand> commands;
+
+  /**
+   * Shell description.
+   */
+  final String description;
+
+  /**
+   * Shell name.
+   */
+  final String name;
+
+  ArgsShell({this.commands, this.description, this.name});
 }

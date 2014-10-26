@@ -3,7 +3,7 @@ args_helper
 
 ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 
-Version: 0.0.9
+Version: 0.0.10
 
 **Prototyping**
 
@@ -81,7 +81,7 @@ String _configuration =
 name: my_program
 description: My program
 commands:  
-  say hello:
+  say hello:    
     description: Says hello
     options:
       name:

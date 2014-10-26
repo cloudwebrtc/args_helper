@@ -1,3 +1,7 @@
+## 0.0.10
+
+- Added configuration parser `ArgsParser`
+
 ## 0.0.9
 
 - Fixed bug (check the medhod parameter for `rest`) in `ArgsHelper._checkMethod()`
