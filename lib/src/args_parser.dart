@@ -1,4 +1,4 @@
-part of args_helper.parser;
+part of args_helper.args_parser;
 
 class ArgsParser {
   Map<String, ArgsCommand> _commands;
@@ -87,7 +87,7 @@ class ArgsParser {
     var parts = parents.toList();
     parts.add(name);
     var section = _getSectionName(parts);
-    throw new ArgsHelperException("Section '$section' must be of type '$type'.");
+    throw new FormatException("Section '$section' must be of type '$type'.");
   }
 
   String _getSectionName(List parts, [String separator = "."]) {
@@ -143,7 +143,7 @@ class ArgsParser {
   void _parseCommands() {
     Map commands = _configGetMap(_configuration, "commands", null, []);
     if (commands == null) {
-      throw new ArgsHelperException("Section 'commands' not found.");
+      throw new FormatException("Section 'commands' not found.");
     }
 
     for (var key in commands.keys) {
@@ -151,7 +151,7 @@ class ArgsParser {
       var parent = ["commands"];
       var commandName = _normalizeCommandName(key);
       if (commandName.isEmpty) {
-        throw new ArgsHelperException("Command must have a name.");
+        throw new FormatException("Command must have a name.");
       }
 
       var commandSection = _configGetMap(commands, key, {}, parent);

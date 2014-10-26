@@ -1,3 +1,7 @@
+## 0.0.11
+
+- Added shell descriptor `ArgsShell`
+
 ## 0.0.10
 
 - Added configuration parser `ArgsParser`
