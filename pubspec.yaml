@@ -8,5 +8,5 @@ dependencies:
   logging: any
 dev_dependencies:
   build_tools: any
-  unittest: any
+  test: any
   yaml: any
