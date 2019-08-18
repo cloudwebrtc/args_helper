@@ -3,6 +3,8 @@ version: 0.0.11
 author: Andrew Mezoni <andrew.mezoni@gmail.com>
 description: ArgsHelper intended to help prototyping, implementation and use of the command-line programs with multiple commands (options and arguments).
 homepage: https://github.com/mezoni/args_helper
+environment:
+  sdk: '>1.8.0 <3.0.0'
 dependencies:
   args: any
   logging: any
